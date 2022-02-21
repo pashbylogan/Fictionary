@@ -23,8 +23,8 @@ using a masked language modeling (MLM) loss.
 
 import torch
 from transformers import (
-    AdamW, 
-    Trainer, 
+    AdamW,
+    Trainer,
     TrainingArguments,
     AutoTokenizer,
     AutoConfig,
@@ -38,7 +38,7 @@ import argparse
 # Constants
 SPECIAL_TOKENS  = { "bos_token": "<|BOS|>",
                     "eos_token": "<|EOS|>",
-                    "unk_token": "<|UNK|>",                    
+                    "unk_token": "<|UNK|>",
                     "pad_token": "<|PAD|>",
                     "sep_token": "<|SEP|>"}
 
@@ -47,6 +47,8 @@ SPONSORS = ['microsoft','github', 'woods','woods coffee']
 MODEL           = 'gpt2' #{gpt2, gpt2-medium, gpt2-large, gpt2-xl}
 
 MAXLEN          = 75
+MODEL_PATH = '../outputs/ud_full_2.19.22.bin'
+HOME = '/home/pashbyl/projects/Fictionary/'
 
 def parse_all_args():
     """
@@ -77,16 +79,16 @@ def get_model(tokenizer, special_tokens=None, load_model_path=None):
 
     #GPT2LMHeadModel
     if special_tokens:
-        config = AutoConfig.from_pretrained(MODEL, 
+        config = AutoConfig.from_pretrained(MODEL,
                                             bos_token_id=tokenizer.bos_token_id,
                                             eos_token_id=tokenizer.eos_token_id,
                                             sep_token_id=tokenizer.sep_token_id,
                                             pad_token_id=tokenizer.pad_token_id,
                                             output_hidden_states=False)
     else: 
-        config = AutoConfig.from_pretrained(MODEL,                                     
+        config = AutoConfig.from_pretrained(MODEL,
                                             pad_token_id=tokenizer.eos_token_id,
-                                            output_hidden_states=False)    
+                                            output_hidden_states=False)
 
     #----------------------------------------------------------------#
     model = AutoModelForPreTraining.from_pretrained(MODEL, config=config)
@@ -112,12 +114,12 @@ def define(model, word, num_return=10):
         model.eval()
 
         # Top-p (nucleus) text generation (10 samples):
-        sample_outputs = model.generate(generated, 
-                                    do_sample=True,   
-                                    min_length=50, 
+        sample_outputs = model.generate(generated,
+                                    do_sample=True,
+                                    min_length=50,
                                     max_length=MAXLEN,
-                                    top_k=30,                                 
-                                    top_p=0.7,        
+                                    top_k=30,
+                                    top_p=0.7,
                                     temperature=0.9,
                                     repetition_penalty=2.0,
                                     num_return_sequences=num_return
@@ -137,9 +139,8 @@ def define(model, word, num_return=10):
             return ["This wouldn't have been possible without a .tech domain from Github:)"]
         elif word.lower() == SPONSORS[2] or word.lower() == SPONSORS[3]:
             return ['Woods, you got us through this. Thank you for caffeine.']
-    
 
-def get_model_for_api(weights_path='/home/pashbyl/Fictionary/outputs/pytorch_model.bin'):
+def get_model_for_api(weights_path=MODEL_PATH):
     tokenizer = get_tokenizer(special_tokens=SPECIAL_TOKENS)
     model = get_model(
             tokenizer,
@@ -153,29 +154,29 @@ def main(args):
 
     args = parse_all_args()
     tokenizer = get_tokenizer(special_tokens=SPECIAL_TOKENS)
-    
+
     if args.train_on:
-        model = get_model(tokenizer, 
+        model = get_model(tokenizer,
             special_tokens=SPECIAL_TOKENS,
         )
 
         # Instantiate Dataset
-        train_dataset = Dataset('/home/dawc/Development/data/train.csv', tokenizer, MAXLEN)
-        dev_dataset = Dataset('/home/dawc/Development/data/valid.csv', tokenizer, MAXLEN)
+        train_dataset = Dataset(HOME+'data/train.csv', tokenizer, MAXLEN)
+        dev_dataset = Dataset(HOME+'data/valid.csv', tokenizer, MAXLEN)
 
         for parameter in model.parameters():
             parameter.requires_grad = False
 
-        for i, m in enumerate(model.transformer.h):        
+        for i, m in enumerate(model.transformer.h):
             #Only un-freeze the last n transformer blocks
             if i >= 6:
                 for parameter in m.parameters():
-                    parameter.requires_grad = True 
+                    parameter.requires_grad = True
 
-        for parameter in model.transformer.ln_f.parameters():        
+        for parameter in model.transformer.ln_f.parameters():
             parameter.requires_grad = True
 
-        for parameter in model.lm_head.parameters():        
+        for parameter in model.lm_head.parameters():
             parameter.requires_grad = True
 
         # AdamW is a class from the huggingface library, it is the optimizer we will be using, and we will only be instantiating it with the default parameters. 
@@ -185,7 +186,7 @@ def main(args):
                         )
 
         training_args = TrainingArguments(
-                output_dir='./outputs/dict1_epoch4',
+                output_dir='./outputs/ud',
                 num_train_epochs=5,
                 per_device_train_batch_size=25,
                 per_device_eval_batch_size=25,
@@ -196,7 +197,7 @@ def main(args):
         )
 
     #---------------------------------------------------#
-        
+
         trainer = Trainer(
             model=model,
             args=training_args,
@@ -208,11 +209,11 @@ def main(args):
 
         trainer.train()
         trainer.save_model()
-        
+
     else:
-        model = get_model(tokenizer, 
+        model = get_model(tokenizer,
                 special_tokens=SPECIAL_TOKENS,
-                load_model_path='/home/pashbyl/dict2_epoch1_small.bin'
+                load_model_path=MODEL_PATH
                 )
 
         now = time.time()

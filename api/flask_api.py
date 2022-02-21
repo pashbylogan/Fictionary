@@ -10,6 +10,8 @@ import models.train as models
 app = Flask(__name__)
 cors = CORS(app)
 
+MODEL_PATH = '/home/pashbyl/Fictionary/outputs/dict1_epoch5/checkpoint-1500/training_args.bin'
+
 # ML model definition
 loaded_models = {
     '1': 'data/dict-short.bin',
@@ -17,9 +19,9 @@ loaded_models = {
     '3': 'data/urbandict.bin',
     '4': 'data/urbandict-long.bin',
 }
-model = input(f"{loaded_models}\nEnter model number from above: ")
-weights = loaded_models[model]
-model = models.get_model_for_api(weights_path=weights)
+# model = input(f"{loaded_models}\nEnter model number from above: ")
+# weights = loaded_models[model]
+model = models.get_model_for_api(weights_path=MODEL_PATH)
 
 
 @app.route('/word', methods=["POST"])
@@ -47,7 +49,7 @@ def word():
 
 @app.route('/', methods=["GET"])
 def index():
-    return redirect(f'http://hackathon.chrisdaw.net:3030', 301)
+    return redirect(f'http://fictionary.loganpashby.com', 301)
 
 if __name__ == '__main__':
     """
@@ -55,5 +57,5 @@ if __name__ == '__main__':
     for k, weights_path in loaded_models.items():
         loaded_models[k] = models.get_model(weights_path)
     """
-    app.debug=True
-    app.run(host='0.0.0.0')  # run our Flask app
+    app.debug=False
+    app.run(host='0.0.0.0', port=8000)  # run our Flask app

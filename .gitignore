@@ -7,3 +7,4 @@ test/
 pytorch_model.bin
 optimizer.pt
 *pkl
+outputs

@@ -17,26 +17,26 @@ class Dataset(data.Dataset):
                 if i == 0: continue
                 words.append(row[0])
                 defs.append(row[1])
-        
+
         self.tokenizer = tokenizer
         self.defs = defs
         self.words = words
         self.max_length = max_length
-        
+
     def __len__(self):
         return len(self.words)
 
     def __getitem__(self, idx):
 
         input = "<|BOS|>" + self.words[idx] + "<|SEP|>" + self.defs[idx] + "<|EOS|>"
-        encodings_dict = self.tokenizer(input,                                   
-                                   truncation=True, 
-                                   max_length=self.max_length, 
+        encodings_dict = self.tokenizer(input,
+                                   truncation=True,
+                                   max_length=self.max_length,
                                    padding="max_length")
 
         input_ids = encodings_dict['input_ids']
         attention_mask = encodings_dict['attention_mask']
 
         return {'label': torch.tensor(input_ids),
-                'input_ids': torch.tensor(input_ids), 
+                'input_ids': torch.tensor(input_ids),
                 'attention_mask': torch.tensor(attention_mask)}
