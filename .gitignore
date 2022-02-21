@@ -4,7 +4,8 @@ package-lock.json
 __pycache__/
 .env
 test/
-pytorch_model.bin
+data/pytorch_model.bin
 optimizer.pt
 *pkl
+*csv
 outputs
