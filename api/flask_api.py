@@ -10,7 +10,7 @@ import models.train as models
 app = Flask(__name__)
 cors = CORS(app)
 
-MODEL_PATH = '/home/pashbyl/Fictionary/outputs/dict1_epoch5/checkpoint-1500/training_args.bin'
+MODEL_PATH = '../outputs/ud_full_2.19.22.bin'
 
 # ML model definition
 loaded_models = {
@@ -28,6 +28,7 @@ model = models.get_model_for_api(weights_path=MODEL_PATH)
 def word():
     data = request.json
     word = data['word']
+    print('Word Prompt:', word)
 
     try:
         definition = models.define(model, word, num_return=1)[0]
