@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pandas as pd
 import json
 import sys
+from datetime import datetime
+from termcolor import colored
 
 sys.path.append('..')
 import models.train as models
@@ -28,7 +30,14 @@ model = models.get_model_for_api(weights_path=MODEL_PATH)
 def word():
     data = request.json
     word = data['word']
-    print('Word Prompt:', word)
+
+    cols = 100
+
+    # dd/mm/YY H:M:S
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print(colored('\n' + '='*cols, 'cyan', attrs=['bold']), flush=True)
+    print(dt_string, flush=True)
 
     try:
         definition = models.define(model, word, num_return=1)[0]
@@ -39,6 +48,10 @@ def word():
             definition += '.'
     except:
         definition = "This word is undefinable. Good job..."
+
+    print(colored('Prompt - ', 'magenta', attrs=['bold']) + word, flush=True)
+    print(colored('Definition - ', 'magenta', attrs=['bold']) + definition, flush=True)
+    print(colored('='*cols, 'cyan', attrs=['bold']), flush=True)
 
     resp_data = json.dumps(
             {'definition': definition}
