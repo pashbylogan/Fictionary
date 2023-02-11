@@ -14,6 +14,10 @@ cors = CORS(app)
 
 MODEL_PATH = '../outputs/ud_full_2.19.22.bin'
 
+API_KEYS = {
+    'mHrzvi2MgYesVTNAeNM6Wk6UUQvJX3HWekiAqduoXIpIaPE1JyQj5Y4F2dqXsakLuXiHVFfVIr1ogAR32pyZsb4908X1K8A995NBSIv6sh8B0vABrs08O3otqdtL2KNb'
+}
+
 # ML model definition
 loaded_models = {
     '1': 'data/dict-short.bin',
@@ -25,8 +29,21 @@ loaded_models = {
 # weights = loaded_models[model]
 model = models.get_model_for_api(weights_path=MODEL_PATH)
 
+def authenticate_api_key(func):
+    def wrapper(*args, **kwargs):
+        api_key = request.headers.get("API-KEY")
+        if api_key is None:
+            return "API Key is missing", 401
+
+        if api_key not in API_KEYS:
+            return "Invalid API Key", 401
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 @app.route('/word', methods=["POST"])
+@authenticate_api_key
 def word():
     data = request.json
     word = data['word']
@@ -46,7 +63,8 @@ def word():
                         .replace('sex', 'love').replace('genital', 'appendage')
         if definition[-1] != '.':
             definition += '.'
-    except:
+    except Exception as e:
+        print(e)
         definition = "This word is undefinable. Good job..."
 
     print(colored('Prompt - ', 'magenta', attrs=['bold']) + word, flush=True)
